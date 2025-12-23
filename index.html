@@ -1,0 +1,2541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>LOGO Designer(LOGO在线设计)</title>
+    <style>
+      :root {
+        --ui-bg0: #060b16;
+        --ui-bg1: #0b1220;
+        --ui-panel: rgba(255, 255, 255, 0.045);
+        --ui-panel2: rgba(255, 255, 255, 0.07);
+        --ui-line: rgba(255, 255, 255, 0.14);
+        --ui-text: rgba(255, 255, 255, 0.92);
+        --ui-muted: rgba(255, 255, 255, 0.65);
+
+        --theme-primary: #6ae4ff;
+        --theme-secondary: #ffffff;
+        --theme-accent: #ff5a7a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: radial-gradient(
+          1200px 800px at 20% 10%,
+          #101a33 0%,
+          var(--ui-bg1) 40%,
+          var(--ui-bg0) 100%
+        );
+        color: var(--ui-text);
+        font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei",
+          sans-serif;
+        overflow: hidden;
+      }
+      /* ✅ 稳定拖动内核必备 */
+      #stage,
+      #stageInner,
+      #svg,
+      .draggable {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .app {
+        height: 100%;
+        display: grid;
+        grid-template-columns: 330px 1fr 380px;
+        gap: 12px;
+        padding: 12px;
+      }
+      .panel {
+        border: 1px solid var(--ui-line);
+        background: var(--ui-panel);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      }
+      .panel header {
+        padding: 12px 12px 10px;
+        border-bottom: 1px solid var(--ui-line);
+        background: linear-gradient(180deg, var(--ui-panel2), transparent);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .panel header .ttl {
+        font-weight: 900;
+        font-size: 14px;
+        letter-spacing: 0.2px;
+      }
+      .panel header .sub {
+        font-size: 12px;
+        color: var(--ui-muted);
+        margin-top: 2px;
+      }
+      .content {
+        padding: 12px;
+        overflow: auto;
+        min-height: 0;
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 120px;
+      }
+      .section {
+        margin: 10px 0 6px;
+        font-weight: 900;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.82);
+        letter-spacing: 0.2px;
+      }
+      label {
+        font-size: 12px;
+        color: var(--ui-muted);
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--ui-line);
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--ui-text);
+        padding: 8px 10px;
+        border-radius: 12px;
+        outline: none;
+        font-size: 12px;
+      }
+      input[type="color"] {
+        padding: 0;
+        height: 36px;
+      }
+      input[type="range"] {
+        padding: 0;
+        height: 28px;
+      }
+      textarea {
+        min-height: 70px;
+        resize: vertical;
+      }
+
+      .btn {
+        border: 1px solid var(--ui-line);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--ui-text);
+        padding: 8px 10px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .btn:hover {
+        border-color: rgba(106, 228, 255, 0.45);
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn.primary {
+        border-color: rgba(106, 228, 255, 0.35);
+        background: rgba(106, 228, 255, 0.1);
+      }
+      .btn.ok {
+        border-color: rgba(87, 242, 135, 0.35);
+        background: rgba(87, 242, 135, 0.1);
+      }
+      .btn.danger {
+        border-color: rgba(255, 90, 122, 0.35);
+        background: rgba(255, 90, 122, 0.1);
+      }
+      .btn.small {
+        padding: 6px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--ui-line);
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--ui-muted);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", monospace;
+        font-size: 11px;
+        padding: 2px 6px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.25);
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .sep {
+        height: 1px;
+        background: var(--ui-line);
+        margin: 12px 0;
+      }
+
+      /* 左侧组件 */
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+      .tile {
+        border: 1px solid var(--ui-line);
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 14px;
+        padding: 10px;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        min-height: 78px;
+      }
+      .tile:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        transform: translateY(-1px);
+      }
+      .tile .mini {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        opacity: 0.95;
+      }
+      .tile .name {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.85);
+        text-align: center;
+      }
+
+      /* 中央画布 */
+      .stageWrap {
+        border: 1px solid var(--ui-line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+      }
+      .topbar {
+        padding: 10px;
+        border-bottom: 1px solid var(--ui-line);
+        background: linear-gradient(180deg, var(--ui-panel2), transparent);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      #stage {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      #stageInner {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+      }
+      #canvasShell {
+        position: relative;
+        transform-origin: center center;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+      }
+      .checker {
+        background: linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.1) 25%,
+            transparent 25%
+          ),
+          linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+          linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+        background-size: 18px 18px;
+        background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
+      }
+      #svg {
+        display: block;
+        background: transparent;
+      }
+      #content *,
+      .draggable * {
+        pointer-events: all;
+      }
+
+      .selectedOutline {
+        filter: drop-shadow(0 0 10px rgba(106, 228, 255, 0.75));
+      }
+
+      #marquee {
+        position: absolute;
+        display: none;
+        border: 1px dashed rgba(106, 228, 255, 0.95);
+        background: rgba(106, 228, 255, 0.12);
+        pointer-events: none;
+        border-radius: 10px;
+        z-index: 10;
+      }
+      .guide {
+        position: absolute;
+        pointer-events: none;
+        background: rgba(106, 228, 255, 0.55);
+        display: none;
+        z-index: 9;
+      }
+      .guide.h {
+        height: 1px;
+      }
+      .guide.v {
+        width: 1px;
+      }
+
+      /* 图层 */
+      .layerItem {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid var(--ui-line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        margin-bottom: 8px;
+      }
+      .layerItem.active {
+        border-color: rgba(106, 228, 255, 0.35);
+        background: rgba(106, 228, 255, 0.08);
+      }
+      .layerItem .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.28);
+      }
+      .layerItem input.name {
+        flex: 1;
+        padding: 6px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+      .iconBtn {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--ui-line);
+        background: rgba(0, 0, 0, 0.12);
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 12px;
+        color: var(--ui-muted);
+      }
+      .iconBtn:hover {
+        border-color: rgba(255, 255, 255, 0.18);
+        color: var(--ui-text);
+        transform: translateY(-1px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- 左侧 -->
+      <section class="panel">
+        <header>
+          <div>
+            <div class="ttl">组件 / 模板</div>
+            <div class="sub">离线版：拖动稳定；Shift 多选；空白拖动框选</div>
+          </div>
+          <div class="row">
+            <button class="btn small" id="btnSaveLS">保存</button>
+            <button class="btn small" id="btnLoadLS">恢复</button>
+          </div>
+        </header>
+        <div class="content">
+          <div class="section">形状</div>
+          <div class="palette" id="shapePalette"></div>
+
+          <div class="section">图标（内置 SVG）</div>
+          <input
+            id="iconSearch"
+            placeholder="搜索：star / bolt / leaf / heart / shield / crown / wave ..."
+          />
+          <div style="height: 8px"></div>
+          <div class="palette" id="iconPalette"></div>
+
+          <div class="section">文字</div>
+          <div class="palette" id="textPalette"></div>
+
+          <div class="section">模板（行业）</div>
+          <div class="row">
+            <select id="tplSelect">
+              <option value="tech">科技</option>
+              <option value="food">餐饮</option>
+              <option value="edu">教育</option>
+              <option value="game">游戏</option>
+              <option value="medical">医疗</option>
+            </select>
+            <button class="btn primary" id="btnApplyTpl">应用模板</button>
+          </div>
+          <div class="row">
+            <input id="tplBrand" placeholder="模板品牌名（可空）" />
+            <button class="btn" id="btnTplTextReplace">一键替换文字</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnTplPalette1">配色 A</button>
+            <button class="btn" id="btnTplPalette2">配色 B</button>
+            <button class="btn" id="btnTplPalette3">配色 C</button>
+          </div>
+
+          <div class="sep"></div>
+          <div class="row" style="gap: 10px">
+            <span class="badge"><kbd>Shift</kbd> 多选</span>
+            <span class="badge"><kbd>拖空白</kbd> 框选</span>
+            <span class="badge"><kbd>Delete</kbd> 删除</span>
+            <span class="badge"><kbd>Ctrl/Cmd+Z</kbd> 撤销</span>
+            <span class="badge"><kbd>Ctrl/Cmd+Y</kbd> 重做</span>
+          </div>
+          <div class="sep"></div>
+
+          <div class="section">导出</div>
+          <div class="row">
+            <select id="exportType">
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+              <option value="svg">SVG</option>
+            </select>
+            <select id="exportScale">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+            <button class="btn ok" id="btnExport">导出</button>
+          </div>
+          <div class="row">
+            <button class="btn danger" id="btnClear">清空画布</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 中央 -->
+      <section class="stageWrap">
+        <div class="topbar">
+          <div class="toolbar">
+            <button class="btn" id="zoomOut">-</button>
+            <button class="btn" id="zoomIn">+</button>
+            <span class="badge" id="zoomLabel">100%</span>
+
+            <span class="badge">
+              画布
+              <select id="presetSize" style="width: auto">
+                <option value="1024x1024">正方形 1024×1024</option>
+                <option value="1400x900">横版 1400×900</option>
+                <option value="900x1400">竖版 900×1400</option>
+              </select>
+            </span>
+
+            <span class="badge">
+              W
+              <input
+                id="canvasW"
+                type="number"
+                value="1024"
+                min="100"
+                style="width: 92px"
+              />
+              H
+              <input
+                id="canvasH"
+                type="number"
+                value="1024"
+                min="100"
+                style="width: 92px"
+              />
+              <button class="btn small" id="applyCanvasSize">应用</button>
+            </span>
+
+            <span class="badge">
+              网格
+              <select id="gridSize" style="width: auto">
+                <option value="0">关</option>
+                <option value="8">8</option>
+                <option value="12">12</option>
+                <option value="16" selected>16</option>
+                <option value="24">24</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn" id="btnUndo">撤销</button>
+            <button class="btn" id="btnRedo">重做</button>
+            <span class="badge" id="selCount">未选择</span>
+          </div>
+        </div>
+
+        <div id="stage">
+          <div id="stageInner">
+            <div id="canvasShell" class="checker">
+              <svg
+                id="svg"
+                width="1024"
+                height="1024"
+                viewBox="0 0 1024 1024"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs id="defs">
+                  <!-- grid -->
+                  <pattern
+                    id="gridPattern"
+                    width="16"
+                    height="16"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 16 0 L 0 0 0 16"
+                      fill="none"
+                      stroke="rgba(255,255,255,.12)"
+                      stroke-width="1"
+                    />
+                  </pattern>
+                  <pattern
+                    id="gridPatternBold"
+                    width="80"
+                    height="80"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 80 0 L 0 0 0 80"
+                      fill="none"
+                      stroke="rgba(255,255,255,.16)"
+                      stroke-width="1"
+                    />
+                  </pattern>
+                </defs>
+
+                <rect
+                  id="bgRect"
+                  x="0"
+                  y="0"
+                  width="100%"
+                  height="100%"
+                  fill="transparent"
+                ></rect>
+
+                <g id="gridLayer" opacity="0.9">
+                  <rect
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    fill="url(#gridPattern)"
+                  ></rect>
+                  <rect
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    fill="url(#gridPatternBold)"
+                  ></rect>
+                </g>
+
+                <g id="content"></g>
+              </svg>
+            </div>
+
+            <div id="marquee"></div>
+            <div class="guide h" id="guideH"></div>
+            <div class="guide v" id="guideV"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧 -->
+      <section class="panel">
+        <header>
+          <div>
+            <div class="ttl">属性 / 图层</div>
+            <div class="sub">
+              元素：x/y/旋转/缩放；填充：纯色/渐变；曲线文字
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn small" id="btnBringFront">置顶</button>
+            <button class="btn small" id="btnSendBack">置底</button>
+          </div>
+        </header>
+        <div class="content">
+          <div class="section">主题色（全局）</div>
+          <div class="row">
+            <div class="col">
+              <label>Primary</label
+              ><input id="themePrimary" type="color" value="#6ae4ff" />
+            </div>
+            <div class="col">
+              <label>Secondary</label
+              ><input id="themeSecondary" type="color" value="#ffffff" />
+            </div>
+            <div class="col">
+              <label>Accent</label
+              ><input id="themeAccent" type="color" value="#ff5a7a" />
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnApplyTheme">应用到选中</button>
+            <button class="btn" id="btnThemeToAll">应用到全部</button>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">变换</div>
+          <div class="row">
+            <div class="col">
+              <label>X</label
+              ><input type="number" id="posX" value="0" step="1" />
+            </div>
+            <div class="col">
+              <label>Y</label
+              ><input type="number" id="posY" value="0" step="1" />
+            </div>
+            <div class="col">
+              <label>旋转 (°)</label
+              ><input type="number" id="rotDeg" value="0" step="1" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>ScaleX</label
+              ><input type="number" id="scaleX" value="1" step="0.01" />
+            </div>
+            <div class="col">
+              <label>ScaleY</label
+              ><input type="number" id="scaleY" value="1" step="0.01" />
+            </div>
+            <div class="col">
+              <label>旋转吸附</label>
+              <select id="rotSnap">
+                <option value="0">无</option>
+                <option value="15">15°</option>
+                <option value="30">30°</option>
+                <option value="45">45°</option>
+                <option value="90">90°</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">文字</div>
+          <div class="row">
+            <div class="col">
+              <label>文本</label
+              ><textarea
+                id="textValue"
+                placeholder="选中文字后可编辑"
+              ></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>字体</label>
+              <select id="fontFamily">
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="system-ui, sans-serif">System</option>
+                <option value='"PingFang SC","Microsoft YaHei",sans-serif'>
+                  中文（系统）
+                </option>
+                <option value='"Times New Roman",serif'>Times</option>
+                <option value='"Georgia",serif'>Georgia</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>字号</label
+              ><input id="fontSize" type="number" value="48" step="1" />
+            </div>
+            <div class="col">
+              <label>字重</label>
+              <select id="fontWeight">
+                <option value="400">400</option>
+                <option value="600">600</option>
+                <option value="800" selected>800</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>字距</label
+              ><input id="letterSpacing" type="number" value="0" step="0.5" />
+            </div>
+            <div class="col">
+              <label>行距</label
+              ><input id="lineHeight" type="number" value="1.1" step="0.05" />
+            </div>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">曲线文字</div>
+          <div class="row">
+            <div class="col">
+              <label>弧度（-1~1）</label
+              ><input
+                id="curveBend"
+                type="range"
+                min="-1"
+                max="1"
+                step="0.01"
+                value="0.35"
+              />
+            </div>
+            <div class="col">
+              <label>半径</label
+              ><input id="curveRadius" type="number" value="220" step="1" />
+            </div>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">填充 / 渐变</div>
+          <div class="row">
+            <div class="col">
+              <label>填充类型</label>
+              <select id="fillType">
+                <option value="solid">纯色</option>
+                <option value="linear">线性渐变</option>
+                <option value="radial">径向渐变</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>颜色 1</label
+              ><input id="fillC1" type="color" value="#6ae4ff" />
+            </div>
+            <div class="col">
+              <label>颜色 2</label
+              ><input id="fillC2" type="color" value="#ff5a7a" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>线性角度</label
+              ><input
+                id="gradAngle"
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                value="45"
+              />
+            </div>
+            <div class="col">
+              <label>径向大小</label
+              ><input
+                id="radialR"
+                type="range"
+                min="0.2"
+                max="2"
+                step="0.01"
+                value="1"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnApplyFill">应用填充</button>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">背景</div>
+          <div class="row">
+            <div class="col">
+              <label>背景类型</label>
+              <select id="bgType">
+                <option value="transparent">透明</option>
+                <option value="solid">纯色</option>
+                <option value="linear">渐变</option>
+              </select>
+            </div>
+            <div class="col">
+              <label>背景色 1</label
+              ><input id="bgC1" type="color" value="#000000" />
+            </div>
+            <div class="col">
+              <label>背景色 2</label
+              ><input id="bgC2" type="color" value="#000000" />
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <label>背景角度</label
+              ><input
+                id="bgAngle"
+                type="range"
+                min="0"
+                max="360"
+                step="1"
+                value="90"
+              />
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnApplyBg">应用背景</button>
+          </div>
+
+          <div class="sep"></div>
+          <div class="section">图层</div>
+          <div id="layers"></div>
+
+          <div class="sep"></div>
+          <div class="row">
+            <button class="btn danger" id="btnDelete">删除选中</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      /* =========================================================
+   v3-full-nocdn：数据模型
+   ========================================================= */
+      const $ = (s, el = document) => el.querySelector(s);
+      const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+      const svg = $("#svg");
+      const defs = $("#defs");
+      const content = $("#content");
+      const stageInner = $("#stageInner");
+      const canvasShell = $("#canvasShell");
+      const marquee = $("#marquee");
+      const guideH = $("#guideH");
+      const guideV = $("#guideV");
+
+      const uid = () =>
+        "id_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+      let zoom = 1;
+      let grid = 16;
+
+      const state = {
+        canvas: { w: 1024, h: 1024 },
+        theme: { primary: "#6ae4ff", secondary: "#ffffff", accent: "#ff5a7a" },
+        background: {
+          type: "transparent",
+          c1: "#000000",
+          c2: "#000000",
+          angle: 90,
+        },
+        elements: [], // [{id,type,name,x,y,r,sx,sy,style:{fillType,c1,c2,angle,radialR,stroke,strokeW,opacity}, text:{...}, curve:{...}, visible:true}]
+      };
+
+      function deepClone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+
+      /* =========================================================
+   History：Undo/Redo
+   ========================================================= */
+      const history = {
+        undo: [],
+        redo: [],
+        max: 50,
+        push(label) {
+          // 保存快照（只存 state）
+          this.undo.push(deepClone(state));
+          if (this.undo.length > this.max) this.undo.shift();
+          this.redo = [];
+          updateHistoryButtons();
+        },
+        canUndo() {
+          return this.undo.length > 0;
+        },
+        canRedo() {
+          return this.redo.length > 0;
+        },
+        doUndo() {
+          if (!this.canUndo()) return;
+          this.redo.push(deepClone(state));
+          const snap = this.undo.pop();
+          loadState(snap, { silent: true });
+          updateHistoryButtons();
+        },
+        doRedo() {
+          if (!this.canRedo()) return;
+          this.undo.push(deepClone(state));
+          const snap = this.redo.pop();
+          loadState(snap, { silent: true });
+          updateHistoryButtons();
+        },
+      };
+      function updateHistoryButtons() {
+        $("#btnUndo").disabled = !history.canUndo();
+        $("#btnRedo").disabled = !history.canRedo();
+      }
+
+      /* =========================================================
+   SVG 坐标转换
+   ========================================================= */
+      function svgPointFromClient(clientX, clientY) {
+        const pt = svg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = svg.getScreenCTM();
+        if (!ctm) return { x: 0, y: 0 };
+        const sp = pt.matrixTransform(ctm.inverse());
+        return { x: sp.x, y: sp.y };
+      }
+
+      /* =========================================================
+   选择系统
+   ========================================================= */
+      const selected = new Set(); // ids
+
+      function getElModel(id) {
+        return state.elements.find((e) => e.id === id);
+      }
+      function getElNode(id) {
+        return $(`g[data-id="${id}"]`, content);
+      }
+
+      function clearSelection() {
+        selected.forEach((id) => {
+          const n = getElNode(id);
+          if (n) n.classList.remove("selectedOutline");
+        });
+        selected.clear();
+        updateSelectionUI();
+        refreshLayersUI();
+      }
+      function addToSelection(id) {
+        const n = getElNode(id);
+        if (!n) return;
+        selected.add(id);
+        n.classList.add("selectedOutline");
+        updateSelectionUI();
+        refreshLayersUI();
+      }
+      function selectOnly(id) {
+        clearSelection();
+        addToSelection(id);
+      }
+      function toggleSelect(id) {
+        const n = getElNode(id);
+        if (!n) return;
+        if (selected.has(id)) {
+          selected.delete(id);
+          n.classList.remove("selectedOutline");
+        } else {
+          selected.add(id);
+          n.classList.add("selectedOutline");
+        }
+        updateSelectionUI();
+        refreshLayersUI();
+      }
+      function updateSelectionUI() {
+        $("#selCount").textContent = selected.size
+          ? `已选 ${selected.size} 个`
+          : "未选择";
+
+        // 单选时同步属性面板
+        if (selected.size === 1) {
+          const id = [...selected][0];
+          const m = getElModel(id);
+          $("#posX").value = Math.round(m.x);
+          $("#posY").value = Math.round(m.y);
+          $("#rotDeg").value = Math.round(m.r);
+          $("#scaleX").value = m.sx.toFixed(2);
+          $("#scaleY").value = m.sy.toFixed(2);
+
+          // 文本面板
+          if (m.type === "text" || m.type === "curveText") {
+            $("#textValue").value = m.text?.value ?? "";
+            $("#fontFamily").value = m.text?.fontFamily ?? "Arial, sans-serif";
+            $("#fontSize").value = m.text?.fontSize ?? 48;
+            $("#fontWeight").value = String(m.text?.fontWeight ?? 800);
+            $("#letterSpacing").value = m.text?.letterSpacing ?? 0;
+            $("#lineHeight").value = m.text?.lineHeight ?? 1.1;
+            $("#curveBend").value = m.curve?.bend ?? 0.35;
+            $("#curveRadius").value = m.curve?.radius ?? 220;
+          } else {
+            $("#textValue").value = "";
+          }
+
+          // 填充面板
+          const st = m.style || {};
+          $("#fillType").value = st.fillType ?? "solid";
+          $("#fillC1").value = st.c1 ?? state.theme.primary;
+          $("#fillC2").value = st.c2 ?? state.theme.accent;
+          $("#gradAngle").value = st.angle ?? 45;
+          $("#radialR").value = st.radialR ?? 1;
+        }
+      }
+
+      /* =========================================================
+   渲染：transform + style
+   ========================================================= */
+      function applyTransform(node, m) {
+        node.setAttribute(
+          "transform",
+          `translate(${m.x} ${m.y}) rotate(${m.r}) scale(${m.sx} ${m.sy})`
+        );
+      }
+      function ensureGradientDef(m) {
+        // 返回 fill 值（color 或 url(#id)）
+        const st = m.style || {};
+        const fillType = st.fillType || "solid";
+        const c1 = st.c1 || state.theme.primary;
+        const c2 = st.c2 || state.theme.accent;
+
+        if (fillType === "solid") return c1;
+
+        const gid = `grad_${m.id}`;
+        let g = $(`#${gid}`, defs);
+
+        if (fillType === "linear") {
+          if (!g || g.tagName !== "linearGradient") {
+            if (g) g.remove();
+            g = document.createElementNS(svg.namespaceURI, "linearGradient");
+            g.setAttribute("id", gid);
+            g.setAttribute("gradientUnits", "objectBoundingBox");
+            defs.appendChild(g);
+          }
+          // angle -> x1,y1,x2,y2
+          const angle = ((st.angle ?? 45) * Math.PI) / 180;
+          const x1 = 0.5 - Math.cos(angle) / 2;
+          const y1 = 0.5 - Math.sin(angle) / 2;
+          const x2 = 0.5 + Math.cos(angle) / 2;
+          const y2 = 0.5 + Math.sin(angle) / 2;
+          g.setAttribute("x1", x1);
+          g.setAttribute("y1", y1);
+          g.setAttribute("x2", x2);
+          g.setAttribute("y2", y2);
+          g.innerHTML = `
+      <stop offset="0%" stop-color="${c1}"></stop>
+      <stop offset="100%" stop-color="${c2}"></stop>
+    `;
+          return `url(#${gid})`;
+        }
+
+        if (fillType === "radial") {
+          if (!g || g.tagName !== "radialGradient") {
+            if (g) g.remove();
+            g = document.createElementNS(svg.namespaceURI, "radialGradient");
+            g.setAttribute("id", gid);
+            g.setAttribute("gradientUnits", "objectBoundingBox");
+            defs.appendChild(g);
+          }
+          const rr = clamp(parseFloat(st.radialR ?? 1), 0.2, 2);
+          g.setAttribute("cx", 0.5);
+          g.setAttribute("cy", 0.5);
+          g.setAttribute("r", rr / 2); // object box
+          g.innerHTML = `
+      <stop offset="0%" stop-color="${c1}"></stop>
+      <stop offset="100%" stop-color="${c2}"></stop>
+    `;
+          return `url(#${gid})`;
+        }
+
+        return c1;
+      }
+      function applyStyle(node, m) {
+        const st = m.style || {};
+        const opacity = st.opacity ?? 1;
+        node.setAttribute("opacity", opacity);
+
+        // 填充：找到主要可填充的子节点（rect/circle/path/text）
+        const fillVal = ensureGradientDef(m);
+        const targets = $$('[data-role="fill"]', node);
+        targets.forEach((t) => {
+          if (t.tagName === "line") {
+            t.setAttribute("stroke", fillVal);
+          } else {
+            t.setAttribute("fill", fillVal);
+            // 图标用 stroke 也跟随
+            if (
+              t.getAttribute("stroke") &&
+              t.getAttribute("stroke") !== "none"
+            ) {
+              t.setAttribute("stroke", fillVal);
+            }
+          }
+        });
+
+        // 描边（简化）
+        const stroke = st.stroke ?? "none";
+        const strokeW = st.strokeW ?? 0;
+        $$('[data-role="stroke"]', node).forEach((t) => {
+          t.setAttribute("stroke", stroke);
+          t.setAttribute("stroke-width", strokeW);
+        });
+      }
+
+      /* =========================================================
+   渲染单个元素
+   ========================================================= */
+      function renderElement(m) {
+        let g = getElNode(m.id);
+        const isNew = !g;
+        if (!g) {
+          g = document.createElementNS(svg.namespaceURI, "g");
+          g.dataset.id = m.id;
+          g.classList.add("draggable");
+          g.style.pointerEvents = "all";
+          content.appendChild(g);
+
+          // 选中 + 开始拖动
+          g.addEventListener(
+            "pointerdown",
+            (e) => {
+              e.stopPropagation();
+              if (e.shiftKey) toggleSelect(m.id);
+              else selectOnly(m.id);
+              startDrag(e, m.id);
+            },
+            { passive: false }
+          );
+        }
+
+        // 可见性
+        g.style.display = m.visible === false ? "none" : "block";
+
+        // 构建具体图形（只在新建或类型变化时重建）
+        if (isNew || g.dataset.type !== m.type) {
+          g.innerHTML = "";
+          g.dataset.type = m.type;
+
+          if (m.type === "shape") {
+            if (m.shapeKind === "rect") {
+              const r = document.createElementNS(svg.namespaceURI, "rect");
+              r.setAttribute("x", 0);
+              r.setAttribute("y", 0);
+              r.setAttribute("width", 260);
+              r.setAttribute("height", 160);
+              r.setAttribute("rx", 28);
+              r.dataset.role = "fill";
+              g.appendChild(r);
+            } else if (m.shapeKind === "circle") {
+              const c = document.createElementNS(svg.namespaceURI, "circle");
+              c.setAttribute("cx", 90);
+              c.setAttribute("cy", 90);
+              c.setAttribute("r", 90);
+              c.dataset.role = "fill";
+              g.appendChild(c);
+            } else if (m.shapeKind === "triangle") {
+              const p = document.createElementNS(svg.namespaceURI, "path");
+              p.setAttribute("d", "M 140 10 L 270 240 L 10 240 Z");
+              p.dataset.role = "fill";
+              g.appendChild(p);
+            } else if (m.shapeKind === "line") {
+              const l = document.createElementNS(svg.namespaceURI, "line");
+              l.setAttribute("x1", 0);
+              l.setAttribute("y1", 0);
+              l.setAttribute("x2", 260);
+              l.setAttribute("y2", 0);
+              l.setAttribute("stroke-linecap", "round");
+              l.setAttribute("stroke-width", 10);
+              l.dataset.role = "fill";
+              g.appendChild(l);
+            }
+          }
+
+          if (m.type === "icon") {
+            const inner = document.createElementNS(svg.namespaceURI, "g");
+            inner.setAttribute("transform", "scale(2.2)");
+            inner.innerHTML = ICONS_MAP[m.iconKey] || ICONS_MAP["star"];
+            // 标记 fill 目标：把所有 path 设为可填充
+            $$("path,polygon,circle,rect,line", inner).forEach((n) => {
+              n.dataset.role = "fill";
+              if (n.tagName === "line") n.setAttribute("stroke-width", 8);
+            });
+            g.appendChild(inner);
+          }
+
+          if (m.type === "text") {
+            const t = document.createElementNS(svg.namespaceURI, "text");
+            t.setAttribute("x", 0);
+            t.setAttribute("y", 40);
+            t.dataset.role = "fill";
+            t.textContent = m.text?.value ?? "LOGO";
+            g.appendChild(t);
+          }
+
+          if (m.type === "curveText") {
+            // path in defs + textPath
+            const pathId = `curve_${m.id}`;
+            let p = $(`#${pathId}`, defs);
+            if (!p) {
+              p = document.createElementNS(svg.namespaceURI, "path");
+              p.setAttribute("id", pathId);
+              p.setAttribute("fill", "none");
+              defs.appendChild(p);
+            }
+            const t = document.createElementNS(svg.namespaceURI, "text");
+            t.dataset.role = "fill";
+            const tp = document.createElementNS(svg.namespaceURI, "textPath");
+            tp.setAttribute("href", `#${pathId}`);
+            tp.textContent = m.text?.value ?? "CURVED LOGO";
+            t.appendChild(tp);
+            g.appendChild(t);
+          }
+        }
+
+        // text / curve updates
+        if (m.type === "text" || m.type === "curveText") {
+          const t = $("text", g);
+          const tv = m.text?.value ?? "";
+          if (t) {
+            if (m.type === "text") {
+              t.textContent = tv;
+            } else {
+              const tp = $("textPath", t);
+              if (tp) tp.textContent = tv;
+            }
+            t.setAttribute(
+              "font-family",
+              m.text?.fontFamily ?? "Arial, sans-serif"
+            );
+            t.setAttribute("font-size", m.text?.fontSize ?? 48);
+            t.setAttribute("font-weight", m.text?.fontWeight ?? 800);
+            t.setAttribute("letter-spacing", m.text?.letterSpacing ?? 0);
+            if (m.type === "text") {
+              // multi-line：用 tspans 简化（按 \n）
+              const lines = (tv || "LOGO").split("\n");
+              if (lines.length > 1) {
+                t.textContent = "";
+                lines.forEach((ln, i) => {
+                  const sp = document.createElementNS(
+                    svg.namespaceURI,
+                    "tspan"
+                  );
+                  sp.setAttribute("x", 0);
+                  sp.setAttribute(
+                    "dy",
+                    i === 0
+                      ? "0"
+                      : (m.text?.lineHeight ?? 1.1) * (m.text?.fontSize ?? 48)
+                  );
+                  sp.textContent = ln;
+                  t.appendChild(sp);
+                });
+                t.setAttribute("y", m.text?.fontSize ?? 48);
+              } else {
+                // 单行
+                t.setAttribute("x", 0);
+                t.setAttribute("y", m.text?.fontSize ?? 48);
+                t.textContent = tv || "LOGO";
+              }
+            }
+          }
+
+          if (m.type === "curveText") {
+            const pathId = `curve_${m.id}`;
+            const p = $(`#${pathId}`, defs);
+            if (p) {
+              const bend = clamp(parseFloat(m.curve?.bend ?? 0.35), -1, 1);
+              const radius = Math.max(20, parseFloat(m.curve?.radius ?? 220));
+              // 构造一条简单弧线：左右跨度固定，根据 bend 调整控制点
+              const span = radius * 2;
+              const y = 0;
+              const cx = span / 2;
+              const cy = bend * radius; // bend>0 向上拱
+              p.setAttribute("d", `M 0 ${y} Q ${cx} ${-cy} ${span} ${y}`);
+            }
+          }
+        }
+
+        applyTransform(g, m);
+        applyStyle(g, m);
+
+        // selection style
+        if (selected.has(m.id)) g.classList.add("selectedOutline");
+        else g.classList.remove("selectedOutline");
+      }
+
+      /* =========================================================
+   全量渲染
+   ========================================================= */
+      function renderAll() {
+        // background
+        applyBackground();
+
+        // grid
+        setGrid(grid);
+
+        // 1) 清理：移除模型中不存在的节点
+        const ids = new Set(state.elements.map((e) => e.id));
+        $$("#content > g").forEach((g) => {
+          if (!ids.has(g.dataset.id)) g.remove();
+        });
+
+        // 2) 渲染/更新每个元素（确保节点存在）
+        state.elements.forEach((m) => renderElement(m));
+
+        // ✅ 3) 关键修复：按 state.elements 的顺序重排 DOM（SVG 后面的会盖在上面）
+        // appendChild 对已存在节点会“移动到末尾”，从而更新 z-order
+        state.elements.forEach((m) => {
+          const node = getElNode(m.id);
+          if (node) content.appendChild(node);
+        });
+
+        refreshLayersUI();
+        updateSelectionUI();
+      }
+
+      /* =========================================================
+   背景
+   ========================================================= */
+      function applyBackground() {
+        const bg = state.background;
+        if (bg.type === "transparent") {
+          $("#bgRect").setAttribute("fill", "transparent");
+          $("#bgRect").removeAttribute("fill-opacity");
+          return;
+        }
+        if (bg.type === "solid") {
+          $("#bgRect").setAttribute("fill", bg.c1);
+          return;
+        }
+        if (bg.type === "linear") {
+          const gid = "bg_grad";
+          let g = $(`#${gid}`, defs);
+          if (!g || g.tagName !== "linearGradient") {
+            if (g) g.remove();
+            g = document.createElementNS(svg.namespaceURI, "linearGradient");
+            g.setAttribute("id", gid);
+            g.setAttribute("gradientUnits", "objectBoundingBox");
+            defs.appendChild(g);
+          }
+          const angle = ((bg.angle ?? 90) * Math.PI) / 180;
+          const x1 = 0.5 - Math.cos(angle) / 2;
+          const y1 = 0.5 - Math.sin(angle) / 2;
+          const x2 = 0.5 + Math.cos(angle) / 2;
+          const y2 = 0.5 + Math.sin(angle) / 2;
+          g.setAttribute("x1", x1);
+          g.setAttribute("y1", y1);
+          g.setAttribute("x2", x2);
+          g.setAttribute("y2", y2);
+          g.innerHTML = `
+      <stop offset="0%" stop-color="${bg.c1}"></stop>
+      <stop offset="100%" stop-color="${bg.c2}"></stop>
+    `;
+          $("#bgRect").setAttribute("fill", `url(#${gid})`);
+        }
+      }
+
+      /* =========================================================
+   网格/画布/缩放
+   ========================================================= */
+      function setZoom(z) {
+        zoom = clamp(z, 0.2, 3);
+        canvasShell.style.transform = `scale(${zoom})`;
+        $("#zoomLabel").textContent = `${Math.round(zoom * 100)}%`;
+      }
+      function setCanvasSize(w, h) {
+        state.canvas.w = w;
+        state.canvas.h = h;
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+        $("#canvasW").value = w;
+        $("#canvasH").value = h;
+      }
+      function setGrid(g) {
+        grid = parseInt(g, 10);
+        const gridLayer = $("#gridLayer");
+        if (grid <= 0) {
+          gridLayer.style.display = "none";
+        } else {
+          gridLayer.style.display = "block";
+          $("#gridPattern").setAttribute("width", grid);
+          $("#gridPattern").setAttribute("height", grid);
+          const bold = grid * 5;
+          $("#gridPatternBold").setAttribute("width", bold);
+          $("#gridPatternBold").setAttribute("height", bold);
+        }
+      }
+
+      /* =========================================================
+   稳定拖动内核（原生 pointer events + capture）
+   ========================================================= */
+      let drag = null; // {pointerId, startSvg:{x,y}, starts:Map(id->{x,y}), primaryId}
+      function startDrag(e, primaryId) {
+        if (e.button !== 0) return;
+        const pointerId = e.pointerId;
+        const start = svgPointFromClient(e.clientX, e.clientY);
+
+        // 记录起始
+        const starts = new Map();
+        selected.forEach((id) => {
+          const m = getElModel(id);
+          starts.set(id, { x: m.x, y: m.y });
+        });
+        drag = { pointerId, startSvg: start, starts, primaryId };
+
+        // 捕获到当前元素 node
+        const node = getElNode(primaryId);
+        if (node) node.setPointerCapture(pointerId);
+
+        // 绑定 move/up 到 window 防止丢事件
+        window.addEventListener("pointermove", onDragMove, { passive: false });
+        window.addEventListener("pointerup", onDragEnd, { passive: false });
+        window.addEventListener("pointercancel", onDragEnd, { passive: false });
+      }
+      function onDragMove(e) {
+        if (!drag || e.pointerId !== drag.pointerId) return;
+        e.preventDefault();
+        const now = svgPointFromClient(e.clientX, e.clientY);
+        let dx = now.x - drag.startSvg.x;
+        let dy = now.y - drag.startSvg.y;
+
+        if (grid > 0) {
+          dx = Math.round(dx / grid) * grid;
+          dy = Math.round(dy / grid) * grid;
+        }
+
+        // 对齐辅助：简单吸附到画布中心（±4px）
+        const snapTol = 4;
+        if (selected.size === 1) {
+          const id = [...selected][0];
+          const st = drag.starts.get(id);
+          const cx = state.canvas.w / 2;
+          const cy = state.canvas.h / 2;
+          const nx = st.x + dx;
+          const ny = st.y + dy;
+          let snapX = null,
+            snapY = null;
+
+          if (Math.abs(nx - cx) <= snapTol) {
+            snapX = cx;
+          }
+          if (Math.abs(ny - cy) <= snapTol) {
+            snapY = cy;
+          }
+
+          guideV.style.display = snapX !== null ? "block" : "none";
+          guideH.style.display = snapY !== null ? "block" : "none";
+          if (snapX !== null) {
+            dx = snapX - st.x;
+            const r = stageInner.getBoundingClientRect();
+            const p = svg.createSVGPoint();
+            p.x = snapX;
+            p.y = 0;
+            const sp = p.matrixTransform(svg.getScreenCTM());
+            guideV.style.left = sp.x - r.left + "px";
+            guideV.style.top = "0px";
+            guideV.style.height = r.height + "px";
+          }
+          if (snapY !== null) {
+            dy = snapY - st.y;
+            const r = stageInner.getBoundingClientRect();
+            const p = svg.createSVGPoint();
+            p.x = 0;
+            p.y = snapY;
+            const sp = p.matrixTransform(svg.getScreenCTM());
+            guideH.style.top = sp.y - r.top + "px";
+            guideH.style.left = "0px";
+            guideH.style.width = r.width + "px";
+          }
+        } else {
+          guideH.style.display = "none";
+          guideV.style.display = "none";
+        }
+
+        selected.forEach((id) => {
+          const m = getElModel(id);
+          const st = drag.starts.get(id);
+          m.x = st.x + dx;
+          m.y = st.y + dy;
+          const node = getElNode(id);
+          if (node) applyTransform(node, m);
+        });
+
+        // 同步面板
+        if (selected.size === 1) {
+          const id = [...selected][0];
+          const m = getElModel(id);
+          $("#posX").value = Math.round(m.x);
+          $("#posY").value = Math.round(m.y);
+        }
+      }
+      function onDragEnd(e) {
+        if (!drag || e.pointerId !== drag.pointerId) return;
+        e.preventDefault();
+        drag = null;
+        guideH.style.display = "none";
+        guideV.style.display = "none";
+
+        window.removeEventListener("pointermove", onDragMove);
+        window.removeEventListener("pointerup", onDragEnd);
+        window.removeEventListener("pointercancel", onDragEnd);
+
+        // 结束拖动入历史（避免每帧 push）
+        history.push("drag");
+      }
+
+      /* =========================================================
+   框选（空白处拖动），不抢元素拖动
+   ========================================================= */
+      let boxSel = null; // {startClient:{x,y}, pointerId, shift}
+      function isBlank(target) {
+        return !(target && target.closest && target.closest("#content"));
+      }
+      function stopBoxCapture() {
+        if (boxSel?.pointerId != null) {
+          try {
+            stageInner.releasePointerCapture(boxSel.pointerId);
+          } catch (_) {}
+        }
+      }
+      stageInner.addEventListener(
+        "pointerdown",
+        (e) => {
+          if (e.button !== 0) return;
+          if (!isBlank(e.target)) return; // 元素上不启动框选
+
+          boxSel = {
+            startClient: { x: e.clientX, y: e.clientY },
+            pointerId: e.pointerId,
+            shift: e.shiftKey,
+          };
+          if (!e.shiftKey) clearSelection();
+
+          const r = stageInner.getBoundingClientRect();
+          marquee.style.display = "block";
+          marquee.style.left = e.clientX - r.left + "px";
+          marquee.style.top = e.clientY - r.top + "px";
+          marquee.style.width = "0px";
+          marquee.style.height = "0px";
+
+          stageInner.setPointerCapture(e.pointerId);
+        },
+        { passive: false }
+      );
+
+      stageInner.addEventListener(
+        "pointermove",
+        (e) => {
+          if (!boxSel) return;
+          e.preventDefault();
+          const r = stageInner.getBoundingClientRect();
+          const x1 = boxSel.startClient.x - r.left;
+          const y1 = boxSel.startClient.y - r.top;
+          const x2 = e.clientX - r.left;
+          const y2 = e.clientY - r.top;
+          const left = Math.min(x1, x2),
+            top = Math.min(y1, y2);
+          const w = Math.abs(x2 - x1),
+            h = Math.abs(y2 - y1);
+          marquee.style.left = left + "px";
+          marquee.style.top = top + "px";
+          marquee.style.width = w + "px";
+          marquee.style.height = h + "px";
+        },
+        { passive: false }
+      );
+
+      stageInner.addEventListener(
+        "pointerup",
+        (e) => {
+          if (!boxSel) {
+            // 单击空白：清空（不按 shift）
+            if (isBlank(e.target) && !e.shiftKey) clearSelection();
+            return;
+          }
+          e.preventDefault();
+
+          marquee.style.display = "none";
+
+          // 计算框选范围（svg 坐标）
+          const p1 = svgPointFromClient(
+            boxSel.startClient.x,
+            boxSel.startClient.y
+          );
+          const p2 = svgPointFromClient(e.clientX, e.clientY);
+          const minX = Math.min(p1.x, p2.x),
+            maxX = Math.max(p1.x, p2.x);
+          const minY = Math.min(p1.y, p2.y),
+            maxY = Math.max(p1.y, p2.y);
+
+          // 命中：node.getBBox + node.getCTM -> 全局 AABB
+          $$("#content > g").forEach((g) => {
+            const bb = g.getBBox();
+            const m = g.getCTM();
+            if (!m) return;
+            const pts = [
+              { x: bb.x, y: bb.y },
+              { x: bb.x + bb.width, y: bb.y },
+              { x: bb.x + bb.width, y: bb.y + bb.height },
+              { x: bb.x, y: bb.y + bb.height },
+            ].map((p) => ({
+              x: m.a * p.x + m.c * p.y + m.e,
+              y: m.b * p.x + m.d * p.y + m.f,
+            }));
+            const xs = pts.map((p) => p.x),
+              ys = pts.map((p) => p.y);
+            const gx = Math.min(...xs),
+              gy = Math.min(...ys);
+            const gw = Math.max(...xs) - gx,
+              gh = Math.max(...ys) - gy;
+            const inside =
+              gx >= minX && gy >= minY && gx + gw <= maxX && gy + gh <= maxY;
+            if (inside) addToSelection(g.dataset.id);
+          });
+
+          stopBoxCapture();
+          boxSel = null;
+        },
+        { passive: false }
+      );
+
+      stageInner.addEventListener(
+        "pointercancel",
+        () => {
+          marquee.style.display = "none";
+          stopBoxCapture();
+          boxSel = null;
+        },
+        { passive: false }
+      );
+
+      /* =========================================================
+   图标库（内置 SVG path）
+   ========================================================= */
+      const ICONS = [
+        {
+          key: "star",
+          svg: `<path d="M50 4 L62 35 L96 35 L68 54 L78 86 L50 66 L22 86 L32 54 L4 35 L38 35 Z"/>`,
+        },
+        {
+          key: "bolt",
+          svg: `<path d="M58 4 L18 58 H46 L34 96 L82 40 H54 Z"/>`,
+        },
+        {
+          key: "leaf",
+          svg: `<path d="M85 10 C60 10 42 20 30 35 C14 55 14 78 30 90 C45 102 70 100 84 82 C98 64 100 40 92 22 C90 17 88 13 85 10 Z"/><path d="M32 88 C45 70 60 55 82 40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>`,
+        },
+        {
+          key: "heart",
+          svg: `<path d="M50 90 C20 70 8 52 12 36 C16 20 34 14 44 24 C48 28 50 32 50 32 C50 32 52 28 56 24 C66 14 84 20 88 36 C92 52 80 70 50 90 Z"/>`,
+        },
+        {
+          key: "shield",
+          svg: `<path d="M50 6 L86 18 V52 C86 75 70 90 50 96 C30 90 14 75 14 52 V18 Z"/>`,
+        },
+        {
+          key: "crown",
+          svg: `<path d="M10 70 L16 22 L40 48 L50 20 L60 48 L84 22 L90 70 Z"/><rect x="18" y="70" width="64" height="16" rx="6"/>`,
+        },
+        {
+          key: "wave",
+          svg: `<path d="M5 60 C20 40 40 40 55 60 C70 80 90 80 95 60" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>`,
+        },
+      ];
+      const ICONS_MAP = Object.fromEntries(ICONS.map((i) => [i.key, i.svg]));
+
+      /* =========================================================
+   组件创建（写入 model）
+   ========================================================= */
+      function baseStyle() {
+        return {
+          fillType: "solid",
+          c1: state.theme.primary,
+          c2: state.theme.accent,
+          angle: 45,
+          radialR: 1,
+          stroke: "none",
+          strokeW: 0,
+          opacity: 1,
+        };
+      }
+      function addShape(kind, x = 200, y = 200) {
+        history.push("add");
+        const m = {
+          id: uid(),
+          type: "shape",
+          name: kind,
+          shapeKind: kind,
+          x,
+          y,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: baseStyle(),
+          visible: true,
+        };
+        if (kind === "line") {
+          m.style.c1 = state.theme.primary;
+        }
+        state.elements.push(m);
+        renderAll();
+        selectOnly(m.id);
+      }
+      function addIcon(key, x = 220, y = 220) {
+        history.push("add");
+        const m = {
+          id: uid(),
+          type: "icon",
+          name: key,
+          iconKey: key,
+          x,
+          y,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: baseStyle(),
+          visible: true,
+        };
+        state.elements.push(m);
+        renderAll();
+        selectOnly(m.id);
+      }
+      function addText(kind = "single", x = 260, y = 260) {
+        history.push("add");
+        const isMulti = kind === "multi";
+        const m = {
+          id: uid(),
+          type: "text",
+          name: "text",
+          x,
+          y,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: { ...baseStyle(), c1: state.theme.secondary },
+          text: {
+            value: isMulti ? "YOUR\nBRAND" : "LOGO",
+            fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif',
+            fontSize: 56,
+            fontWeight: 800,
+            letterSpacing: 0,
+            lineHeight: 1.1,
+          },
+          visible: true,
+        };
+        state.elements.push(m);
+        renderAll();
+        selectOnly(m.id);
+      }
+      function addCurveText(x = 240, y = 420) {
+        history.push("add");
+        const m = {
+          id: uid(),
+          type: "curveText",
+          name: "curveText",
+          x,
+          y,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: { ...baseStyle(), c1: state.theme.secondary },
+          text: {
+            value: "CURVED LOGO",
+            fontFamily: "Arial, sans-serif",
+            fontSize: 52,
+            fontWeight: 800,
+            letterSpacing: 0,
+            lineHeight: 1.1,
+          },
+          curve: { bend: 0.35, radius: 220 },
+          visible: true,
+        };
+        state.elements.push(m);
+        renderAll();
+        selectOnly(m.id);
+      }
+
+      /* =========================================================
+   左侧 Palette UI
+   ========================================================= */
+      function makeTile({ label, miniSvg, onClick }) {
+        const div = document.createElement("div");
+        div.className = "tile";
+        div.innerHTML = `<div class="mini">${
+          miniSvg || ""
+        }</div><div class="name">${label}</div>`;
+        div.addEventListener("click", onClick);
+        return div;
+      }
+
+      function buildPalettes() {
+        const shapes = [
+          {
+            key: "rect",
+            label: "矩形",
+            mini: `<svg width="30" height="30"><rect x="4" y="7" width="22" height="16" rx="5" fill="rgba(106,228,255,.9)"/></svg>`,
+          },
+          {
+            key: "circle",
+            label: "圆形",
+            mini: `<svg width="30" height="30"><circle cx="15" cy="15" r="9" fill="rgba(106,228,255,.9)"/></svg>`,
+          },
+          {
+            key: "triangle",
+            label: "三角",
+            mini: `<svg width="30" height="30"><path d="M15 6 L26 25 L4 25 Z" fill="rgba(106,228,255,.9)"/></svg>`,
+          },
+          {
+            key: "line",
+            label: "线条",
+            mini: `<svg width="30" height="30"><line x1="5" y1="15" x2="25" y2="15" stroke="rgba(106,228,255,.9)" stroke-width="4" stroke-linecap="round"/></svg>`,
+          },
+        ];
+        const box = $("#shapePalette");
+        box.innerHTML = "";
+        shapes.forEach((s) =>
+          box.appendChild(
+            makeTile({
+              label: s.label,
+              miniSvg: s.mini,
+              onClick: () =>
+                addShape(s.key, state.canvas.w * 0.25, state.canvas.h * 0.25),
+            })
+          )
+        );
+
+        const texts = [
+          {
+            key: "single",
+            label: "单行字",
+            mini: `<svg width="30" height="30"><text x="4" y="19" font-size="14" fill="rgba(255,255,255,.9)" font-weight="800">Aa</text></svg>`,
+          },
+          {
+            key: "multi",
+            label: "多行字",
+            mini: `<svg width="30" height="30"><text x="4" y="13" font-size="10" fill="rgba(255,255,255,.85)" font-weight="800">A</text><text x="4" y="24" font-size="10" fill="rgba(255,255,255,.65)" font-weight="800">a</text></svg>`,
+          },
+          {
+            key: "curve",
+            label: "曲线字",
+            mini: `<svg width="30" height="30" viewBox="0 0 30 30"><path d="M2 18 Q15 6 28 18" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2"/><text x="6" y="22" font-size="8" fill="rgba(255,255,255,.85)">Aa</text></svg>`,
+          },
+        ];
+        const tbox = $("#textPalette");
+        tbox.innerHTML = "";
+        texts.forEach((t) =>
+          tbox.appendChild(
+            makeTile({
+              label: t.label,
+              miniSvg: t.mini,
+              onClick: () =>
+                t.key === "curve"
+                  ? addCurveText(state.canvas.w * 0.22, state.canvas.h * 0.55)
+                  : addText(
+                      t.key,
+                      state.canvas.w * 0.25,
+                      state.canvas.h * 0.55
+                    ),
+            })
+          )
+        );
+
+        renderIconPalette("");
+      }
+      function renderIconPalette(keyword) {
+        const box = $("#iconPalette");
+        box.innerHTML = "";
+        const k = (keyword || "").trim().toLowerCase();
+        ICONS.filter((i) => !k || i.key.includes(k)).forEach((i) => {
+          const mini = `<svg width="30" height="30" viewBox="0 0 100 100"><g fill="rgba(106,228,255,.92)" stroke="rgba(106,228,255,.92)">${i.svg}</g></svg>`;
+          box.appendChild(
+            makeTile({
+              label: i.key,
+              miniSvg: mini,
+              onClick: () =>
+                addIcon(i.key, state.canvas.w * 0.55, state.canvas.h * 0.35),
+            })
+          );
+        });
+      }
+
+      /* =========================================================
+   属性面板：把输入应用到 model + render
+   ========================================================= */
+      function applyTransformFromPanel() {
+        if (selected.size !== 1) return;
+        const id = [...selected][0];
+        const m = getElModel(id);
+        if (!m) return;
+
+        const snap = parseInt($("#rotSnap").value || "0", 10);
+        const x = parseFloat($("#posX").value || "0");
+        const y = parseFloat($("#posY").value || "0");
+        let r = parseFloat($("#rotDeg").value || "0");
+        if (snap > 0) r = Math.round(r / snap) * snap;
+
+        const sx = clamp(parseFloat($("#scaleX").value || "1"), 0.05, 50);
+        const sy = clamp(parseFloat($("#scaleY").value || "1"), 0.05, 50);
+
+        m.x = x;
+        m.y = y;
+        m.r = r;
+        m.sx = sx;
+        m.sy = sy;
+
+        const node = getElNode(id);
+        if (node) applyTransform(node, m);
+
+        $("#rotDeg").value = Math.round(r);
+        $("#scaleX").value = sx.toFixed(2);
+        $("#scaleY").value = sy.toFixed(2);
+
+        history.push("transform");
+        refreshLayersUI();
+      }
+
+      function applyTextFromPanel() {
+        if (selected.size !== 1) return;
+        const id = [...selected][0];
+        const m = getElModel(id);
+        if (!m || (m.type !== "text" && m.type !== "curveText")) return;
+
+        m.text = m.text || {};
+        m.text.value = $("#textValue").value || "";
+        m.text.fontFamily = $("#fontFamily").value;
+        m.text.fontSize = parseFloat($("#fontSize").value || "48");
+        m.text.fontWeight = parseInt($("#fontWeight").value || "800", 10);
+        m.text.letterSpacing = parseFloat($("#letterSpacing").value || "0");
+        m.text.lineHeight = parseFloat($("#lineHeight").value || "1.1");
+
+        if (m.type === "curveText") {
+          m.curve = m.curve || {};
+          m.curve.bend = parseFloat($("#curveBend").value || "0");
+          m.curve.radius = parseFloat($("#curveRadius").value || "220");
+        }
+
+        renderElement(m);
+        history.push("text");
+        refreshLayersUI();
+      }
+
+      function applyFillFromPanel() {
+        if (selected.size === 0) return;
+        history.push("fill");
+        selected.forEach((id) => {
+          const m = getElModel(id);
+          if (!m) return;
+          m.style = m.style || baseStyle();
+          m.style.fillType = $("#fillType").value;
+          m.style.c1 = $("#fillC1").value;
+          m.style.c2 = $("#fillC2").value;
+          m.style.angle = parseFloat($("#gradAngle").value || "45");
+          m.style.radialR = parseFloat($("#radialR").value || "1");
+          renderElement(m);
+        });
+      }
+
+      function applyThemeToSelection(all = false) {
+        history.push("theme");
+        const primary = $("#themePrimary").value;
+        const secondary = $("#themeSecondary").value;
+        const accent = $("#themeAccent").value;
+        state.theme = { primary, secondary, accent };
+
+        const ids = all ? state.elements.map((e) => e.id) : [...selected];
+        ids.forEach((id) => {
+          const m = getElModel(id);
+          if (!m) return;
+          m.style = m.style || baseStyle();
+          // icon/shape 默认用 primary；文字用 secondary
+          if (m.type === "text" || m.type === "curveText") {
+            m.style.c1 = secondary;
+          } else {
+            m.style.c1 = primary;
+            m.style.c2 = accent;
+          }
+          renderElement(m);
+        });
+      }
+
+      function applyBackgroundFromPanel() {
+        history.push("background");
+        state.background.type = $("#bgType").value;
+        state.background.c1 = $("#bgC1").value;
+        state.background.c2 = $("#bgC2").value;
+        state.background.angle = parseFloat($("#bgAngle").value || "90");
+        applyBackground();
+      }
+
+      /* =========================================================
+   图层 UI（排序/重命名/显示隐藏）
+   ========================================================= */
+      function moveLayer(id, dir) {
+        history.push("layer");
+        const idx = state.elements.findIndex((e) => e.id === id);
+        if (idx < 0) return;
+        const nidx = idx + dir;
+        if (nidx < 0 || nidx >= state.elements.length) return;
+        history.push("layer");
+        const [it] = state.elements.splice(idx, 1);
+        state.elements.splice(nidx, 0, it);
+        renderAll();
+      }
+      function bringFront() {
+        if (selected.size !== 1) return;
+        const id = [...selected][0];
+        const idx = state.elements.findIndex((e) => e.id === id);
+        if (idx < 0) return;
+        history.push("layer");
+        const [it] = state.elements.splice(idx, 1);
+        state.elements.push(it);
+        renderAll();
+      }
+      function sendBack() {
+        if (selected.size !== 1) return;
+        const id = [...selected][0];
+        const idx = state.elements.findIndex((e) => e.id === id);
+        if (idx < 0) return;
+        history.push("layer");
+        const [it] = state.elements.splice(idx, 1);
+        state.elements.unshift(it);
+        renderAll();
+      }
+
+      function refreshLayersUI() {
+        const box = $("#layers");
+        box.innerHTML = "";
+
+        // 列表顶部 = 最上层元素
+        const list = [...state.elements].slice().reverse();
+
+        list.forEach((m) => {
+          const item = document.createElement("div");
+          item.className = "layerItem" + (selected.has(m.id) ? " active" : "");
+          item.innerHTML = `
+      <div class="dot"></div>
+      <input class="name" value="${escapeHtml(m.name || m.type)}" />
+      <div class="iconBtn" title="上移">▲</div>
+      <div class="iconBtn" title="下移">▼</div>
+      <div class="iconBtn" title="显示/隐藏">${
+        m.visible === false ? "🙈" : "👁"
+      }</div>
+    `;
+
+          // 点击图层 = 选中
+          item.addEventListener("click", (e) => {
+            if (e.target.classList.contains("name")) return;
+            if (e.shiftKey) toggleSelect(m.id);
+            else selectOnly(m.id);
+          });
+
+          // 重命名
+          const nameInput = item.querySelector(".name");
+          nameInput.addEventListener("input", () => {
+            m.name = nameInput.value;
+          });
+
+          // 上移 / 下移（注意：因为列表是 reverse 的）
+          const upBtn = item.querySelectorAll(".iconBtn")[0];
+          const dnBtn = item.querySelectorAll(".iconBtn")[1];
+          const visBtn = item.querySelectorAll(".iconBtn")[2];
+
+          upBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            moveLayer(m.id, +1);
+          });
+          dnBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            moveLayer(m.id, -1);
+          });
+
+          // 显示 / 隐藏（修复逻辑）
+          visBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            history.push("visible");
+            m.visible = m.visible === false ? true : false;
+            const node = getElNode(m.id);
+            if (node) node.style.display = m.visible ? "block" : "none";
+            refreshLayersUI();
+          });
+
+          box.appendChild(item);
+        });
+      }
+
+      /* =========================================================
+   Helpers
+   ========================================================= */
+      function escapeHtml(s) {
+        return String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      /* =========================================================
+   删除/清空
+   ========================================================= */
+      function deleteSelection() {
+        if (selected.size === 0) return;
+        history.push("delete");
+        const ids = new Set([...selected]);
+        state.elements = state.elements.filter((e) => !ids.has(e.id));
+        clearSelection();
+        renderAll();
+      }
+      function clearAll() {
+        if (!confirm("确定清空画布？")) return;
+        history.push("clear");
+        state.elements = [];
+        clearSelection();
+        renderAll();
+      }
+
+      /* =========================================================
+   模板系统
+   ========================================================= */
+      const TPL_PALETTES = [
+        { primary: "#6ae4ff", secondary: "#ffffff", accent: "#ff5a7a" },
+        { primary: "#7CFF6A", secondary: "#0b1220", accent: "#FFD36A" },
+        { primary: "#A56AFF", secondary: "#ffffff", accent: "#6AE4FF" },
+      ];
+
+      function applyPalette(p) {
+        $("#themePrimary").value = p.primary;
+        $("#themeSecondary").value = p.secondary;
+        $("#themeAccent").value = p.accent;
+        applyThemeToSelection(true);
+      }
+
+      function applyTemplate(kind) {
+        history.push("template");
+        state.elements = [];
+        clearSelection();
+
+        // 基础布局：图标 + 形状 + 文字
+        const centerX = state.canvas.w / 2;
+        const centerY = state.canvas.h / 2;
+
+        if (kind === "tech") {
+          addIcon("bolt", centerX - 120, centerY - 160);
+          addShape("circle", centerX + 40, centerY - 170);
+          addText("single", centerX - 160, centerY + 80);
+        } else if (kind === "food") {
+          addIcon("leaf", centerX - 140, centerY - 170);
+          addShape("rect", centerX - 60, centerY - 30);
+          addText("multi", centerX - 130, centerY + 150);
+        } else if (kind === "edu") {
+          addIcon("crown", centerX - 140, centerY - 200);
+          addShape("triangle", centerX + 40, centerY - 170);
+          addText("single", centerX - 140, centerY + 120);
+        } else if (kind === "game") {
+          addIcon("star", centerX - 140, centerY - 200);
+          addShape("rect", centerX - 70, centerY - 60);
+          addCurveText(centerX - 200, centerY + 170);
+        } else if (kind === "medical") {
+          addIcon("shield", centerX - 140, centerY - 200);
+          addShape("circle", centerX + 40, centerY - 170);
+          addText("single", centerX - 120, centerY + 120);
+        }
+
+        // 应用主题到全部（用当前 theme）
+        applyThemeToSelection(true);
+
+        renderAll();
+      }
+
+      function replaceTemplateText() {
+        const name = ($("#tplBrand").value || "").trim();
+        if (!name) return;
+        history.push("tplText");
+        state.elements.forEach((m) => {
+          if (m.type === "text" || m.type === "curveText") {
+            m.text = m.text || {};
+            m.text.value = name;
+            renderElement(m);
+          }
+        });
+      }
+
+      /* =========================================================
+   导出（SVG/PNG/JPG）— 无依赖
+   ========================================================= */
+      function getElementsBBox(pad = 20) {
+        // 获取 content 的整体 bbox（包含子元素 transform）
+        if (!state.elements.length) return null;
+        try {
+          const bb = content.getBBox();
+          const p = Math.max(0, pad || 0);
+          return {
+            x: bb.x - p,
+            y: bb.y - p,
+            w: bb.width + p * 2,
+            h: bb.height + p * 2,
+          };
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function serializeSvgForExportCropped() {
+        const bb = getElementsBBox(20);
+        if (!bb) return null;
+
+        // 克隆 svg
+        const clone = svg.cloneNode(true);
+
+        // 移除 UI：网格、背景（只导出元素）
+        const gridLayer = clone.querySelector("#gridLayer");
+        if (gridLayer) gridLayer.remove();
+        const bgRect = clone.querySelector("#bgRect");
+        if (bgRect) bgRect.remove();
+
+        // 移除选中效果 class
+        clone
+          .querySelectorAll(".selectedOutline")
+          .forEach((n) => n.classList.remove("selectedOutline"));
+
+        // 设置裁剪 viewBox & 尺寸
+        clone.setAttribute("width", bb.w);
+        clone.setAttribute("height", bb.h);
+        clone.setAttribute("viewBox", `${bb.x} ${bb.y} ${bb.w} ${bb.h}`);
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+        const xml = new XMLSerializer().serializeToString(clone);
+        return (
+          `<?xml version="1.0" encoding="UTF-8"?>
+` + xml
+        );
+      }
+      function downloadBlob(blob, filename) {
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      async function exportNow() {
+        const type = $("#exportType").value;
+        const scale = parseInt($("#exportScale").value, 10) || 1;
+
+        const bb = getElementsBBox(20);
+        if (!bb) {
+          alert("没有可导出的元素");
+          return;
+        }
+
+        if (type === "svg") {
+          const txt = serializeSvgForExportCropped();
+          if (!txt) {
+            alert("导出失败：无法计算元素范围");
+            return;
+          }
+          downloadBlob(
+            new Blob([txt], { type: "image/svg+xml" }),
+            "logo_cropped.svg"
+          );
+          return;
+        }
+
+        // raster：使用裁剪后的 SVG
+        const svgText = serializeSvgForExportCropped();
+        if (!svgText) {
+          alert("导出失败：无法计算元素范围");
+          return;
+        }
+
+        const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        await new Promise((res, rej) => {
+          img.onload = () => res();
+          img.onerror = (e) => rej(e);
+          img.src = url;
+        });
+
+        const w = Math.round(bb.w * scale);
+        const h = Math.round(bb.h * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+
+        // JPG 必须有底色；PNG 保持透明
+        if (type === "jpg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+        }
+
+        ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+
+        const mime = type === "jpg" ? "image/jpeg" : "image/png";
+        const quality = type === "jpg" ? 0.92 : 1.0;
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+            downloadBlob(blob, `logo_cropped_${scale}x.${type}`);
+          },
+          mime,
+          quality
+        );
+      }
+
+      /* =========================================================
+   保存 / 恢复（localStorage）
+   ========================================================= */
+      const LS_KEY = "logo_designer_v3_full_nocdn_project";
+      function saveLocal() {
+        const data = JSON.stringify(state);
+        localStorage.setItem(LS_KEY, data);
+        alert("已保存到本地（localStorage）");
+      }
+      function loadLocal() {
+        const txt = localStorage.getItem(LS_KEY);
+        if (!txt) {
+          alert("本地没有保存记录");
+          return;
+        }
+        try {
+          const obj = JSON.parse(txt);
+          loadState(obj, { silent: false });
+        } catch (e) {
+          alert("恢复失败：数据损坏");
+        }
+      }
+      function loadState(obj, { silent } = {}) {
+        // 覆盖 state
+        state.canvas = obj.canvas || state.canvas;
+        state.theme = obj.theme || state.theme;
+        state.background = obj.background || state.background;
+        state.elements = obj.elements || [];
+
+        // 同步 UI
+        setCanvasSize(state.canvas.w, state.canvas.h);
+        $("#themePrimary").value = state.theme.primary;
+        $("#themeSecondary").value = state.theme.secondary;
+        $("#themeAccent").value = state.theme.accent;
+
+        $("#bgType").value = state.background.type;
+        $("#bgC1").value = state.background.c1;
+        $("#bgC2").value = state.background.c2;
+        $("#bgAngle").value = state.background.angle;
+
+        clearSelection();
+        renderAll();
+
+        if (!silent) {
+          history.undo = [];
+          history.redo = [];
+          updateHistoryButtons();
+          alert("已恢复项目");
+        }
+      }
+
+      /* =========================================================
+   事件绑定
+   ========================================================= */
+      $("#zoomIn").onclick = () => setZoom(zoom + 0.1);
+      $("#zoomOut").onclick = () => setZoom(zoom - 0.1);
+      $("#gridSize").addEventListener("change", (e) => setGrid(e.target.value));
+
+      $("#presetSize").addEventListener("change", (e) => {
+        const [w, h] = e.target.value.split("x").map(Number);
+        history.push("canvas");
+        setCanvasSize(w, h);
+        renderAll();
+      });
+      $("#applyCanvasSize").onclick = () => {
+        const w = parseInt($("#canvasW").value, 10);
+        const h = parseInt($("#canvasH").value, 10);
+        if (!w || !h) return;
+        history.push("canvas");
+        setCanvasSize(w, h);
+        renderAll();
+      };
+
+      $("#btnDelete").onclick = deleteSelection;
+      $("#btnClear").onclick = clearAll;
+
+      $("#btnUndo").onclick = () => history.doUndo();
+      $("#btnRedo").onclick = () => history.doRedo();
+
+      $("#btnApplyFill").onclick = applyFillFromPanel;
+
+      $("#btnApplyTheme").onclick = () => applyThemeToSelection(false);
+      $("#btnThemeToAll").onclick = () => applyThemeToSelection(true);
+      $("#btnApplyBg").onclick = applyBackgroundFromPanel;
+
+      $("#btnBringFront").onclick = bringFront;
+      $("#btnSendBack").onclick = sendBack;
+
+      $("#btnSaveLS").onclick = saveLocal;
+      $("#btnLoadLS").onclick = loadLocal;
+
+      $("#btnExport").onclick = exportNow;
+
+      $("#btnApplyTpl").onclick = () => applyTemplate($("#tplSelect").value);
+      $("#btnTplTextReplace").onclick = replaceTemplateText;
+      $("#btnTplPalette1").onclick = () => applyPalette(TPL_PALETTES[0]);
+      $("#btnTplPalette2").onclick = () => applyPalette(TPL_PALETTES[1]);
+      $("#btnTplPalette3").onclick = () => applyPalette(TPL_PALETTES[2]);
+
+      $("#iconSearch").addEventListener("input", (e) =>
+        renderIconPalette(e.target.value)
+      );
+
+      ["posX", "posY", "rotDeg", "scaleX", "scaleY", "rotSnap"].forEach(
+        (id) => {
+          $("#" + id).addEventListener("input", applyTransformFromPanel);
+        }
+      );
+      [
+        "textValue",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "letterSpacing",
+        "lineHeight",
+        "curveBend",
+        "curveRadius",
+      ].forEach((id) => {
+        $("#" + id).addEventListener("input", applyTextFromPanel);
+      });
+      ["fillType", "fillC1", "fillC2", "gradAngle", "radialR"].forEach((id) => {
+        $("#" + id).addEventListener("input", () => {
+          // 不自动写历史，点“应用填充”再写
+        });
+      });
+      ["bgType", "bgC1", "bgC2", "bgAngle"].forEach((id) => {
+        $("#" + id).addEventListener("input", () => {
+          // 点按钮应用
+        });
+      });
+
+      document.addEventListener("keydown", (e) => {
+        const key = e.key.toLowerCase();
+        const isMac = navigator.platform.toLowerCase().includes("mac");
+        const ctrl = isMac ? e.metaKey : e.ctrlKey;
+
+        if (key === "delete" || key === "backspace") {
+          // 防止在 input/textarea 中删字触发
+          const tag =
+            e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+          if (tag === "input" || tag === "textarea") return;
+          deleteSelection();
+        }
+        if (ctrl && key === "z") {
+          e.preventDefault();
+          history.doUndo();
+        }
+        if (ctrl && (key === "y" || (e.shiftKey && key === "z"))) {
+          e.preventDefault();
+          history.doRedo();
+        }
+      });
+
+      /* =========================================================
+   初始化
+   ========================================================= */
+      function init() {
+        buildPalettes();
+
+        // 初始 UI
+        $("#themePrimary").value = state.theme.primary;
+        $("#themeSecondary").value = state.theme.secondary;
+        $("#themeAccent").value = state.theme.accent;
+        $("#bgType").value = state.background.type;
+        $("#bgC1").value = state.background.c1;
+        $("#bgC2").value = state.background.c2;
+        $("#bgAngle").value = state.background.angle;
+
+        setZoom(1);
+        setGrid(16);
+        setCanvasSize(1024, 1024);
+
+        // 放三个默认元素方便上手
+        state.elements.push({
+          id: uid(),
+          type: "shape",
+          name: "rect",
+          shapeKind: "rect",
+          x: 180,
+          y: 220,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: baseStyle(),
+          visible: true,
+        });
+        state.elements.push({
+          id: uid(),
+          type: "icon",
+          name: "bolt",
+          iconKey: "bolt",
+          x: 520,
+          y: 260,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: baseStyle(),
+          visible: true,
+        });
+        state.elements.push({
+          id: uid(),
+          type: "text",
+          name: "text",
+          x: 360,
+          y: 620,
+          r: 0,
+          sx: 1,
+          sy: 1,
+          style: { ...baseStyle(), c1: state.theme.secondary },
+          visible: true,
+          text: {
+            value: "LOGO",
+            fontFamily: "Arial, sans-serif",
+            fontSize: 56,
+            fontWeight: 800,
+            letterSpacing: 0,
+            lineHeight: 1.1,
+          },
+        });
+
+        renderAll();
+        updateHistoryButtons();
+      }
+      init();
+    </script>
+  </body>
+</html>
